@@ -301,7 +301,7 @@ def init_database():
         "schedule_send_time": "19:00",
         "lesson_reminder_minutes": "10",
         "lesson_duration": "45",
-        "group_id": "",
+        "group_id": str(PRIMARY_GROUP_ID),
     }
 
     for key, value in default_settings.items():
@@ -1548,15 +1548,53 @@ def get_setting(key, default=None):
 
 
 # ============================================================
-# GROUP ID
+# GROUP ID — 9-E ASOSIY GURUH
 # ============================================================
 
+# 9-E sinfning yagona rasmiy Telegram guruhi.
+# Barcha e'lon, jadval, uy vazifasi va avtomatik
+# eslatmalar shu guruhga yuboriladi.
+PRIMARY_GROUP_ID = int(
+    os.getenv("PRIMARY_GROUP_ID", "-1001645309356").strip()
+)
+
+
 def set_group_id(group_id):
-    set_setting("group_id", str(group_id))
+    """
+    Faqat 9-E guruhini asosiy guruh sifatida qabul qiladi.
+    """
+    group_id = int(group_id)
+
+    if group_id != PRIMARY_GROUP_ID:
+        raise ValueError(
+            f"Bu bot faqat 9-E guruhiga ulangan. "
+            f"Ruxsat etilgan ID: {PRIMARY_GROUP_ID}"
+        )
+
+    # Database'ga ham yozamiz.
+    set_setting("group_id", str(PRIMARY_GROUP_ID))
+    return str(PRIMARY_GROUP_ID)
 
 
 def get_group_id():
-    return get_setting("group_id")
+    """
+    9-E uchun yagona group ID.
+    Database bo'sh bo'lsa ham PRIMARY_GROUP_ID qaytariladi.
+    """
+    return str(PRIMARY_GROUP_ID)
+
+
+# ============================================================
+# GROUP ID STARTUP VERIFICATION
+# ============================================================
+
+# init_database() vaqtida settings.group_id bo'sh bo'lsa ham,
+# uni 9-E ning rasmiy ID'siga to'ldiramiz.
+try:
+    init_database()
+    set_setting("group_id", str(PRIMARY_GROUP_ID))
+except Exception as exc:
+    print(f"⚠️ GROUP ID INIT ERROR: {exc}")
 
 
 # ============================================================
