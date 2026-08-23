@@ -62,6 +62,38 @@ def student_keyboard():
     )
 
 
+@dp.message(Command("connect"))
+async def connect_handler(message: Message):
+
+    # /connect faqat guruh ichida ishlaydi
+    if message.chat.type not in ("group", "supergroup"):
+        await message.answer(
+            "❌ /connect faqat guruh ichida ishlaydi."
+        )
+        return
+
+    # Faqat guruh administratori ishlata oladi
+    member = await message.bot.get_chat_member(
+        message.chat.id,
+        message.from_user.id
+    )
+
+    if member.status not in ("administrator", "creator"):
+        await message.answer(
+            "❌ Bu buyruqni faqat guruh administratori ishlata oladi."
+        )
+        return
+
+    await message.answer(
+        "✅ <b>GURUH MUVAFFAQIYATLI ULANDI!</b>\n\n"
+        f"🏫 Guruh: <b>{message.chat.title}</b>\n"
+        f"🆔 Guruh ID: <code>{message.chat.id}</code>\n\n"
+        "📚 Endi bu guruh maktab botiga ulangan.\n"
+        "🔔 Dars jadvali va eslatmalar shu guruhga yuboriladi.",
+        parse_mode="HTML"
+    )
+
+
 @dp.message(Command("id"))
 async def id_handler(message: Message):
 
