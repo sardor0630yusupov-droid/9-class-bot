@@ -102,8 +102,8 @@ from utils.excel import (
     read_students_excel
 )
 
-from scheduler import (
-    save_group_id,
+from database import (
+    set_group_id,
     get_group_id
 )
 
@@ -178,6 +178,61 @@ async def admin_command(message: Message):
         "🏫 9-E School Bot\n\n"
         "Kerakli bo‘limni tanlang:"
     )
+
+
+# ============================================================
+# 🔗 GURUHNI BOTGA ULASH / SETGROUP
+# ============================================================
+
+@router.message(Command("connect"))
+async def connect_group(message: Message):
+    """9-E guruhini botning asosiy guruhiga biriktiradi."""
+    if message.chat.type not in ("group", "supergroup"):
+        await message.answer("❌ /connect faqat guruh ichida ishlaydi.")
+        return
+
+    if not is_admin(message):
+        await message.answer("⛔ Bu buyruqni faqat bot administratori ishlata oladi.")
+        return
+
+    group_id = int(message.chat.id)
+    group_name = message.chat.title or "Noma'lum guruh"
+
+    try:
+        set_group_id(group_id)
+        saved_id = get_group_id()
+
+        if saved_id != group_id:
+            raise RuntimeError("Guruh ID saqlanmadi yoki qayta o'qilmadi.")
+
+        await message.answer(
+            "✅ <b>GURUH MUVAFFAQIYATLI ULANDI!</b>\n\n"
+            f"🏫 Guruh: <b>{escape(group_name)}</b>\n"
+            f"🆔 ID: <code>{group_id}</code>\n\n"
+            "📢 E'lonlar shu guruhga yuboriladi.\n"
+            "📚 Dars jadvali shu guruhga yuboriladi.\n"
+            "🎂 Tug'ilgan kunlar shu guruhga yuboriladi.\n"
+            "🎉 Bayram eslatmalari shu guruhga yuboriladi.\n"
+            "🔔 Dars eslatmalari shu guruhga yuboriladi.\n\n"
+            "🔐 Guruh tizimga muvaffaqiyatli biriktirildi.",
+            parse_mode="HTML"
+        )
+        print(f"✅ GROUP CONNECTED: {group_name} | {group_id}")
+
+    except Exception as error:
+        print(f"❌ GROUP CONNECT ERROR: {error!r}")
+        await message.answer(
+            "❌ Guruhni ulashda xatolik yuz berdi.\n\n"
+            f"<code>{escape(str(error))}</code>",
+            parse_mode="HTML"
+        )
+
+
+@router.message(Command("setgroup"))
+async def set_group_command(message: Message):
+    """Eski /setgroup buyrug'ini ham qo'llab-quvvatlaydi."""
+    await connect_group(message)
+
 
 
 # ============================================================
@@ -3477,6 +3532,12 @@ async def announcement_send(
     state: FSMContext
 ):
 
+    print(
+        f"🔥 ANNOUNCEMENT_SEND: callback={callback.data!r} "
+        f"admin={callback.from_user.id if callback.from_user else None}",
+        flush=True
+    )
+
     if not is_admin_callback(callback):
         return
 
@@ -3502,6 +3563,11 @@ async def announcement_send(
 
     group_id = get_group_id()
 
+    print(
+        f"📢 ANNOUNCEMENT GROUP ID FROM DATABASE: {group_id!r}",
+        flush=True
+    )
+
     if not group_id:
 
         await callback.message.answer(
@@ -3516,6 +3582,11 @@ async def announcement_send(
         return
 
     try:
+
+        print(
+            f"📤 ANNOUNCEMENT SENDING TO CHAT_ID: {int(group_id)}",
+            flush=True
+        )
 
         telegram_message = await callback.bot.send_message(
             chat_id=int(group_id),

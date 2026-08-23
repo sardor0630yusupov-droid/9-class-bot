@@ -17,6 +17,8 @@ from database import (
     get_announcements,
     get_attendance_by_date,
     get_students,
+    set_group_id as db_set_group_id,
+    get_group_id as db_get_group_id,
 )
 
 
@@ -26,45 +28,35 @@ from database import (
 
 UZBEKISTAN_TZ = ZoneInfo("Asia/Tashkent")
 
-GROUP_FILE = "data/group_id.txt"
-
-
 # ============================================================
 # 👥 GURUH ID
 # ============================================================
 
 def get_group_id():
-
+    """Database'dan ulangan asosiy guruh ID'sini oladi."""
     try:
-
-        with open(
-            GROUP_FILE,
-            "r",
-            encoding="utf-8"
-        ) as file:
-
-            return int(
-                file.read().strip()
-            )
-
-    except Exception:
-
+        value = db_get_group_id()
+        if value is None or str(value).strip() == "":
+            return None
+        return int(str(value).strip())
+    except (TypeError, ValueError, Exception) as error:
+        print(f"❌ Guruh ID o'qishda xatolik: {error!r}")
         return None
 
 
-def save_group_id(
-    group_id
-):
-
-    with open(
-        GROUP_FILE,
-        "w",
-        encoding="utf-8"
-    ) as file:
-
-        file.write(
-            str(group_id)
-        )
+def save_group_id(group_id):
+    """Asosiy guruh ID'sini database'ga saqlaydi."""
+    try:
+        group_id = int(group_id)
+        db_set_group_id(group_id)
+        saved = get_group_id()
+        if saved != group_id:
+            raise RuntimeError("Guruh ID database'ga saqlangani tasdiqlanmadi.")
+        print(f"✅ Asosiy guruh saqlandi: {group_id}")
+        return True
+    except Exception as error:
+        print(f"❌ Guruh ID saqlash xatosi: {error!r}")
+        return False
 
 
 # ============================================================
