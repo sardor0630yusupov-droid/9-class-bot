@@ -4,7 +4,7 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from openai import AsyncOpenAI
+from google import genai
 
 
 router = Router()
