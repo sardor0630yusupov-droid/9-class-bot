@@ -7,6 +7,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from config import BOT_TOKEN, ADMIN_ID
 
 from handlers.admin import router as admin_router
+from handlers.ai import router as ai_router
 
 from database import (
     init_database,
@@ -21,8 +22,7 @@ from scheduler import scheduler_loop
 dp = Dispatcher()
 
 dp.include_router(admin_router)
-
-
+dp.include_router(ai_router)
 def student_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
